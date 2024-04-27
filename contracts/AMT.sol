@@ -1,4 +1,3 @@
-// SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
@@ -16,7 +15,7 @@ contract BT is Ownable(msg.sender) {
         uint256[] ids;
     }
 
-    struct TestamentTokens {
+    struct PropertyTokens {
         IERC20[] erc20Tokens;
         NFTinfo[] erc721Tokens;
         NFTinfo[] erc1155Tokens;
@@ -29,20 +28,20 @@ contract BT is Ownable(msg.sender) {
         uint256[] erc20shares; //array of erc20 tokens shares corresponding to erc20successors
     }
 
-    struct DeathConfirmation {
+    struct LostAccessConfirmation {
         uint256 confirmed;
         uint256 quorum;
         uint256 confirmationTime;
         address[] guardians;
     }
 
-    struct Testament {
+    struct Property {
         uint256 expirationTime;
         Successors successors;
-        DeathConfirmation voting;
+        LostAccessConfirmation voting;
     }
 
-    enum TestamentState {
+    enum PropertyState {
         NotExist,
         OwnerAlive,
         VoteActive,
@@ -51,7 +50,7 @@ contract BT is Ownable(msg.sender) {
     }
 
     uint256 public constant CONFIRMATION_LOCK = 180 days;
-    uint256 public constant MIN_TESTAMENT_LOCK = 360 days;
+    uint256 public constant MIN_PROPERTY_LOCK = 360 days;
     uint256 public constant CONTINGENCY_PERIOD = 360 * 10 days;
     uint256 public constant MAX_GUARDIANS = 10;
     uint256 public constant erc20SuccessorsLimit = 10;
@@ -63,26 +62,26 @@ contract BT is Ownable(msg.sender) {
     uint256 public priceForChangingguardians;
     /// price in quote token
     uint256 public priceForChangingSuccessors;
-    mapping(address => Testament) public testaments;
+    mapping(address => Property) public properties;
     mapping(address => bool) public firstPayment;
 
-    // testamentOwner  => token   =>  amountPerShare
+    // propertyOwner  => token   =>  amountPerShare
     mapping(address => mapping(address => uint256)) private amountsPerShare;
-    // testamentOwner   =>  successor   =>  token  => already withdrawn
+    // propertyOwner   =>  successor   =>  token  => already withdrawn
     mapping(address => mapping(address => mapping(address => bool)))
-        private alreadyWithdrawn;
+    private alreadyWithdrawn;
 
     modifier correctStatus(
-        TestamentState _state,
-        address _testamentOwner,
+        PropertyState _state,
+        address _propertyOwner,
         string memory _error
     ) {
-        require(getTestamentState(_testamentOwner) == _state, _error);
+        require(getPropertyState(_propertyOwner) == _state, _error);
         _;
     }
 
-    event SuccessorsChanged(address testamentOwner, Successors newSuccessors);
-    event TestamentDeleted(address testamentOwner);
+    event SuccessorsChanged(address propertyOwner, Successors newSuccessors);
+    event PropertyDeleted(address propertyOwner);
 
     event GuardiansChanged(
         address user,
@@ -90,13 +89,13 @@ contract BT is Ownable(msg.sender) {
         address[] newGuardians
     );
 
-    event CreateTestament(address user, Testament newTestament);
+    event CreateProperty(address user, Property newProperty);
 
-    event TestatorAlive(address testamentOwner, uint256 newExpirationTime);
+    event OwnerActive(address propertyOwner, uint256 newExpirationTime);
 
-    event DeathConfirmed(address testamentOwner, uint256 deathConfirmationTime);
+    event LostAccessConfirmed(address propertyOwner, uint256 lostAccessConfirmationTime);
 
-    event GetTestament(address testamentOwner, address successor);
+    event GetProperty(address propertyOwner, address successor);
 
     constructor(address _feeAddress, address _quoteTokenAddress) {
         feeAddress = _feeAddress;
@@ -122,23 +121,23 @@ contract BT is Ownable(msg.sender) {
      * @notice assignment of successors
      */
     function setSuccessors(Successors calldata _newSuccessors)
-        external
-        correctStatus(
-            TestamentState.OwnerAlive,
-            msg.sender,
-            "first confirm that you are still alive"
-        )
+    external
+    correctStatus(
+    PropertyState.OwnerAlive,
+    msg.sender,
+    "first confirm that you are still alive"
+    )
     {
-        Testament storage userTestament = testaments[msg.sender];
+        Property storage userProperty = properties[msg.sender];
 
         require(
             _newSuccessors.erc20shares.length ==
-                _newSuccessors.erc20successors.length,
+            _newSuccessors.erc20successors.length,
             "erc20 successors and shares must be the same length"
         );
         require(
             erc20SuccessorsLimit == 0 ||
-                erc20SuccessorsLimit >= _newSuccessors.erc20successors.length,
+            erc20SuccessorsLimit >= _newSuccessors.erc20successors.length,
             "erc20 successors limit exceeded"
         );
 
@@ -152,7 +151,7 @@ contract BT is Ownable(msg.sender) {
             );
         }
 
-        userTestament.successors = _newSuccessors;
+        userProperty.successors = _newSuccessors;
 
         emit SuccessorsChanged(msg.sender, _newSuccessors);
     }
@@ -161,8 +160,8 @@ contract BT is Ownable(msg.sender) {
      * @notice check validator's and quorum
      */
     function checkVoteParam(uint256 _quorum, uint256 _guardiansLength)
-        private
-        pure
+    private
+    pure
     {
         require(_quorum > 0, "_quorum value must be greater than null");
         require(_guardiansLength <= MAX_GUARDIANS, "too many guardians");
@@ -176,12 +175,12 @@ contract BT is Ownable(msg.sender) {
      * @notice the weight of the validator's vote in case of repetition of the address in _guardians increases
      */
     function setguardians(uint256 _quorum, address[] calldata _guardians)
-        external
-        correctStatus(
-            TestamentState.OwnerAlive,
-            msg.sender,
-            "first confirm that you are still alive"
-        )
+    external
+    correctStatus(
+    PropertyState.OwnerAlive,
+    msg.sender,
+    "first confirm that you are still alive"
+    )
     {
         checkVoteParam(_quorum, _guardians.length);
         if (priceForChangingguardians > 0) {
@@ -192,91 +191,91 @@ contract BT is Ownable(msg.sender) {
             );
         }
 
-        Testament storage userTestament = testaments[msg.sender];
+        Property storage userProperty = properties[msg.sender];
         // reset current voting state
-        userTestament.voting.confirmed = 0;
-        userTestament.voting.guardians = _guardians;
-        userTestament.voting.quorum = _quorum;
+        userProperty.voting.confirmed = 0;
+        userProperty.voting.guardians = _guardians;
+        userProperty.voting.quorum = _quorum;
         emit GuardiansChanged(msg.sender, _quorum, _guardians);
     }
 
-    function deleteTestament() external {
+    function deleteProperty() external {
         require(
-            getTestamentState(msg.sender) < TestamentState.Unlocked,
+            getPropertyState(msg.sender) < PropertyState.Unlocked,
             "alive only"
         );
-        delete testaments[msg.sender];
-        emit TestamentDeleted(msg.sender);
+        delete properties[msg.sender];
+        emit PropertyDeleted(msg.sender);
     }
 
     /**
-     * @notice create testament
+     * @notice create property
      * @param _quorum: voting quorum
      * @param _guardians: array of guardians
      * @param _successors: array of successors
      */
-    function createTestament(
+    function createProperty(
         uint256 _quorum,
         address[] calldata _guardians,
         Successors calldata _successors
     )
-        external
-        correctStatus(TestamentState.NotExist, msg.sender, "already exist")
+    external
+    correctStatus(PropertyState.NotExist, msg.sender, "already exist")
     {
         require(
             _successors.erc20shares.length ==
-                _successors.erc20successors.length,
+            _successors.erc20successors.length,
             "erc20 successors and shares must be the same length"
         );
         require(
             erc20SuccessorsLimit == 0 ||
-                erc20SuccessorsLimit >= _successors.erc20successors.length,
+            erc20SuccessorsLimit >= _successors.erc20successors.length,
             "erc20 successors limit exceeded"
         );
 
         checkVoteParam(_quorum, _guardians.length);
         checkSharesSUM(_successors.erc20shares);
 
-        Testament memory newTestament = Testament(
-            block.timestamp + MIN_TESTAMENT_LOCK,
+        Property memory newProperty = Property(
+            block.timestamp + MIN_PROPERTY_LOCK,
             _successors,
-            DeathConfirmation(0, _quorum, 0, _guardians)
+            LostAccessConfirmation(0, _quorum, 0, _guardians)
         );
 
-        testaments[msg.sender] = newTestament;
+        properties[msg.sender] = newProperty;
 
-        emit CreateTestament(msg.sender, newTestament);
+        emit CreateProperty(msg.sender, newProperty);
     }
 
     /**
      * @notice confirm that you are still alive
      */
     function imAlive() external {
-        TestamentState currentState = getTestamentState(msg.sender);
+        PropertyState currentState = getPropertyState(msg.sender);
         require(
-            currentState == TestamentState.OwnerAlive ||
-                currentState == TestamentState.VoteActive,
-            "state should be OwnerAlive or VoteActive or you can try to delete the testament while it not confirmed"
+            currentState == PropertyState.OwnerAlive ||
+            currentState == PropertyState.VoteActive,
+            "state should be OwnerAlive or VoteActive or you can try to delete the property while it not confirmed"
         );
-        Testament memory userTestament = testaments[msg.sender];
+        Property memory userProperty = properties[msg.sender];
 
         require(
             block.timestamp >
-                (userTestament.expirationTime - MIN_TESTAMENT_LOCK),
+            (userProperty.expirationTime - MIN_PROPERTY_LOCK),
             "no more than two periods"
         );
-        userTestament.voting.confirmed = 0;
-        userTestament.expirationTime += MIN_TESTAMENT_LOCK;
+        userProperty.voting.confirmed = 0;
+        userProperty.expirationTime += MIN_PROPERTY_LOCK;
 
-        testaments[msg.sender] = userTestament;
+        properties[msg.sender] = userProperty;
 
-        emit TestatorAlive(msg.sender, userTestament.expirationTime);
+        emit OwnerActive(msg.sender, userProperty.expirationTime);
     }
 
     function _getVotersCount(uint256 confirmed)
-        private
-        pure
-        returns (uint256 voiceCount)
+    private
+    pure
+    returns (uint256 voiceCount)
     {
         while (confirmed > 0) {
             voiceCount += confirmed & 1;
@@ -284,21 +283,21 @@ contract BT is Ownable(msg.sender) {
         }
     }
 
-    function getVotersCount(address testamentOwner)
-        external
-        view
-        returns (uint256 voiceCount)
+    function getVotersCount(address propertyOwner)
+    external
+    view
+    returns (uint256 voiceCount)
     {
-        DeathConfirmation memory voting = testaments[testamentOwner].voting;
+        LostAccessConfirmation memory voting = properties[propertyOwner].voting;
         voiceCount = _getVotersCount(voting.confirmed);
     }
 
-    function getVoters(address testamentOwner)
-        external
-        view
-        returns (address[] memory)
+    function getVoters(address propertyOwner)
+    external
+    view
+    returns (address[] memory)
     {
-        DeathConfirmation memory voting = testaments[testamentOwner].voting;
+        LostAccessConfirmation memory voting = properties[propertyOwner].voting;
         address[] memory voters = new address[](voting.guardians.length);
         if (voters.length > 0 && voting.confirmed > 0) {
             uint256 count;
@@ -316,16 +315,16 @@ contract BT is Ownable(msg.sender) {
         return voters;
     }
 
-    function confirmDeath(address testamentOwner)
-        external
-        correctStatus(
-            TestamentState.VoteActive,
-            testamentOwner,
-            "voting is not active"
-        )
+    function confirmLostAccess(address propertyOwner)
+    external
+    correctStatus(
+    PropertyState.VoteActive,
+    propertyOwner,
+    "voting is not active"
+    )
     {
-        Testament storage userTestament = testaments[testamentOwner];
-        DeathConfirmation memory voting = userTestament.voting;
+        Property storage userProperty = properties[propertyOwner];
+        LostAccessConfirmation memory voting = userProperty.voting;
 
         for (uint256 i = 0; i < voting.guardians.length; i++) {
             if (
@@ -335,23 +334,23 @@ contract BT is Ownable(msg.sender) {
                 voting.confirmed |= (1 << i);
             }
         }
-        userTestament.voting.confirmed = voting.confirmed;
+        userProperty.voting.confirmed = voting.confirmed;
 
         if (_getVotersCount(voting.confirmed) >= voting.quorum) {
-            userTestament.voting.confirmationTime =
+            userProperty.voting.confirmationTime =
                 block.timestamp +
                 CONFIRMATION_LOCK;
-            emit DeathConfirmed(
-                testamentOwner,
-                userTestament.voting.confirmationTime
+            emit LostAccessConfirmed(
+                propertyOwner,
+                userProperty.voting.confirmationTime
             );
         }
     }
 
     /**
-     * @notice get testament after death confirmation
+     * @notice get property after lost access confirmation
      * call from successors
-     * @param testamentOwner: testament creator
+     * @param propertyOwner: property creator
      * withdrawal info:
      * @param tokens: {IERC20[] erc20Tokens;NFTinfo[] erc721Tokens;NFTinfo[] erc1155Tokens;}
      * erc20Tokens: array of erc20 tokens
@@ -359,19 +358,19 @@ contract BT is Ownable(msg.sender) {
      * erc1155Tokens: array of {address nftAddress;uint256[] ids;} objects
      */
 
-    function withdrawTestament(
-        address testamentOwner,
-        TestamentTokens calldata tokens
+    function withdrawProperty(
+        address propertyOwner,
+        PropertyTokens calldata tokens
     )
-        external
-        correctStatus(
-            TestamentState.Unlocked,
-            testamentOwner,
-            "Testament must be Unlocked"
-        )
+    external
+    correctStatus(
+    PropertyState.Unlocked,
+    propertyOwner,
+    "Property must be Unlocked"
+    )
     {
-        Testament memory userTestament = testaments[testamentOwner];
-        Successors memory userSuccessors = userTestament.successors;
+        Property memory userProperty = properties[propertyOwner];
+        Successors memory userSuccessors = userProperty.successors;
 
         uint256 userERC20Shares;
 
@@ -385,45 +384,45 @@ contract BT is Ownable(msg.sender) {
             // ERC20
             for (uint256 i = 0; i < tokens.erc20Tokens.length; i++) {
                 mapping(address => bool) storage alreadyDone = alreadyWithdrawn[
-                    testamentOwner
-                ][msg.sender];
+                            propertyOwner
+                    ][msg.sender];
                 if (alreadyDone[address(tokens.erc20Tokens[i])] == false) {
                     alreadyDone[address(tokens.erc20Tokens[i])] = true;
                     mapping(address => uint256)
-                        storage amountPerShare = amountsPerShare[
-                            testamentOwner
+                    storage amountPerShare = amountsPerShare[
+                                propertyOwner
                         ];
                     uint256 perShare = amountPerShare[
-                        address(tokens.erc20Tokens[i])
-                    ];
+                                    address(tokens.erc20Tokens[i])
+                        ];
 
                     if (perShare == 0) {
-                        uint256 testamentOwnerBalance = tokens
+                        uint256 propertyOwnerBalance = tokens
                             .erc20Tokens[i]
-                            .balanceOf(testamentOwner);
+                            .balanceOf(propertyOwner);
                         // tokens.erc20Tokens.length == 1 && tokens.erc20Tokens[0]) == quoteTokenAddress
 
-                        uint256 feeAmount = (testamentOwnerBalance * FEE_BP) /
-                            BASE_POINT;
+                        uint256 feeAmount = (propertyOwnerBalance * FEE_BP) /
+                                    BASE_POINT;
                         if (feeAmount > 0) {
                             IERC20(quoteTokenAddress).safeTransferFrom(
-                                testamentOwner,
+                                propertyOwner,
                                 feeAddress,
                                 feeAmount
                             );
-                            testamentOwnerBalance -= feeAmount;
+                            propertyOwnerBalance -= feeAmount;
                         }
 
-                        if (testamentOwnerBalance > BASE_POINT) {
-                            perShare = testamentOwnerBalance / BASE_POINT;
+                        if (propertyOwnerBalance > BASE_POINT) {
+                            perShare = propertyOwnerBalance / BASE_POINT;
                             amountPerShare[
-                                address(tokens.erc20Tokens[i])
+                            address(tokens.erc20Tokens[i])
                             ] = perShare;
 
                             tokens.erc20Tokens[i].safeTransferFrom(
-                                testamentOwner,
+                                propertyOwner,
                                 address(this),
-                                testamentOwnerBalance
+                                propertyOwnerBalance
                             );
                         }
                     }
@@ -447,7 +446,7 @@ contract BT is Ownable(msg.sender) {
                     x++
                 ) {
                     IERC721(tokens.erc721Tokens[i].nftAddress).safeTransferFrom(
-                        testamentOwner,
+                        propertyOwner,
                         msg.sender,
                         tokens.erc721Tokens[i].ids[x]
                     );
@@ -468,58 +467,58 @@ contract BT is Ownable(msg.sender) {
                 ) {
                     batchBalances[x] = IERC1155(
                         tokens.erc1155Tokens[i].nftAddress
-                    ).balanceOf(testamentOwner, tokens.erc1155Tokens[i].ids[x]);
+                    ).balanceOf(propertyOwner, tokens.erc1155Tokens[i].ids[x]);
                 }
                 IERC1155(tokens.erc1155Tokens[i].nftAddress)
-                    .safeBatchTransferFrom(
-                        testamentOwner,
-                        msg.sender,
-                        tokens.erc1155Tokens[i].ids,
-                        batchBalances,
-                        ""
-                    );
+                .safeBatchTransferFrom(
+                    propertyOwner,
+                    msg.sender,
+                    tokens.erc1155Tokens[i].ids,
+                    batchBalances,
+                    ""
+                );
             }
         }
 
-        emit GetTestament(testamentOwner, msg.sender);
+        emit GetProperty(propertyOwner, msg.sender);
     }
 
-    function getTestamentState(address testamentOwner)
-        public
-        view
-        returns (TestamentState)
+    function getPropertyState(address propertyOwner)
+    public
+    view
+    returns (PropertyState)
     {
-        Testament memory userTestament = testaments[testamentOwner];
-        DeathConfirmation memory voting = userTestament.voting;
+        Property memory userProperty = properties[propertyOwner];
+        LostAccessConfirmation memory voting = userProperty.voting;
 
-        if (userTestament.expirationTime > 0) {
+        if (userProperty.expirationTime > 0) {
             // voting started
-            if (block.timestamp > userTestament.expirationTime) {
+            if (block.timestamp > userProperty.expirationTime) {
                 if (
                     _getVotersCount(voting.confirmed) >= voting.quorum ||
                     block.timestamp >
-                    userTestament.expirationTime + CONTINGENCY_PERIOD
+                    userProperty.expirationTime + CONTINGENCY_PERIOD
                 ) {
                     if (block.timestamp < voting.confirmationTime) {
-                        return TestamentState.ConfirmationWaiting;
+                        return PropertyState.ConfirmationWaiting;
                     }
 
-                    return TestamentState.Unlocked;
+                    return PropertyState.Unlocked;
                 }
 
                 if (
                     block.timestamp <
-                    (userTestament.expirationTime + MIN_TESTAMENT_LOCK)
+                    (userProperty.expirationTime + MIN_PROPERTY_LOCK)
                 ) {
-                    return TestamentState.VoteActive;
+                    return PropertyState.VoteActive;
                 }
 
-                return TestamentState.NotExist;
+                return PropertyState.NotExist;
             } else {
-                return TestamentState.OwnerAlive;
+                return PropertyState.OwnerAlive;
             }
         }
 
-        return TestamentState.NotExist;
+        return PropertyState.NotExist;
     }
 }
