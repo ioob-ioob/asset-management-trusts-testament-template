@@ -1,4 +1,5 @@
-pragma solidity ^0.8.0;
+// SPDX-License-Identifier: MIT
+pragma solidity ^0.8.25;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -7,7 +8,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
-contract BT is Ownable(msg.sender) {
+contract AMT is Ownable(msg.sender) {
     using SafeERC20 for IERC20;
 
     struct NFTinfo {
@@ -43,25 +44,21 @@ contract BT is Ownable(msg.sender) {
 
     enum PropertyState {
         NotExist,
-        OwnerAlive,
+        OwnerActive,
         VoteActive,
         ConfirmationWaiting,
         Unlocked
     }
 
-    uint256 public constant CONFIRMATION_LOCK = 180 days;
-    uint256 public constant MIN_PROPERTY_LOCK = 360 days;
-    uint256 public constant CONTINGENCY_PERIOD = 360 * 10 days;
-    uint256 public constant MAX_GUARDIANS = 10;
-    uint256 public constant erc20SuccessorsLimit = 10;
-    uint256 public constant BASE_POINT = 10000; // 100%
-    uint256 public constant FEE_BP = 100; // 1%
+    uint256 private constant BASE_POINT = 10000;
+    uint256 public immutable CONFIRMATION_LOCK = 180 days;
+    uint256 public immutable MIN_PROPERTY_LOCK = 360 days;
+    uint256 public immutable CONTINGENCY_PERIOD = 360 * 10 days;
+    uint256 public immutable MAX_GUARDIANS = 10;
+    uint256 public immutable MAX_SUCCESSORS = 10;
+    uint256 public immutable FEE_BP = 100; // 1%
     address public feeAddress;
-    address public immutable quoteTokenAddress;
-    /// price in quote token
-    uint256 public priceForChangingguardians;
-    /// price in quote token
-    uint256 public priceForChangingSuccessors;
+    
     mapping(address => Property) public properties;
     mapping(address => bool) public firstPayment;
 
@@ -97,11 +94,24 @@ contract BT is Ownable(msg.sender) {
 
     event GetProperty(address propertyOwner, address successor);
 
-    constructor(address _feeAddress, address _quoteTokenAddress) {
+    constructor(
+        address _feeAddress,
+        uint256 _CONFIRMATION_LOCK,
+        uint256 _MIN_PROPERTY_LOCK,
+        uint256 _CONTINGENCY_PERIOD,
+        uint256 _MAX_GUARDIANS,
+        uint256 _MAX_SUCCESSORS,
+        uint256 _FEE_BP
+    ) {
         feeAddress = _feeAddress;
-        quoteTokenAddress = _quoteTokenAddress;
+        CONFIRMATION_LOCK = _CONFIRMATION_LOCK;
+        MIN_PROPERTY_LOCK = _MIN_PROPERTY_LOCK;
+        CONTINGENCY_PERIOD = _CONTINGENCY_PERIOD;
+        MAX_GUARDIANS = _MAX_GUARDIANS;
+        MAX_SUCCESSORS = _MAX_SUCCESSORS;
+        FEE_BP = _FEE_BP;
     }
-
+    
     /**
      * @param _feeAddress: new feeAddress
      */
@@ -123,9 +133,9 @@ contract BT is Ownable(msg.sender) {
     function setSuccessors(Successors calldata _newSuccessors)
     external
     correctStatus(
-    PropertyState.OwnerAlive,
+    PropertyState.OwnerActive,
     msg.sender,
-    "first confirm that you are still alive"
+    "First confirm that you are still active"
     )
     {
         Property storage userProperty = properties[msg.sender];
@@ -133,24 +143,15 @@ contract BT is Ownable(msg.sender) {
         require(
             _newSuccessors.erc20shares.length ==
             _newSuccessors.erc20successors.length,
-            "erc20 successors and shares must be the same length"
+            "ERC20 successors and shares must be the same length"
         );
         require(
-            erc20SuccessorsLimit == 0 ||
-            erc20SuccessorsLimit >= _newSuccessors.erc20successors.length,
-            "erc20 successors limit exceeded"
+            MAX_SUCCESSORS == 0 ||
+            MAX_SUCCESSORS >= _newSuccessors.erc20successors.length,
+            "ERC20 successors limit exceeded"
         );
 
         checkSharesSUM(_newSuccessors.erc20shares);
-
-        if (priceForChangingSuccessors > 0) {
-            IERC20(quoteTokenAddress).safeTransferFrom(
-                msg.sender,
-                feeAddress,
-                priceForChangingSuccessors
-            );
-        }
-
         userProperty.successors = _newSuccessors;
 
         emit SuccessorsChanged(msg.sender, _newSuccessors);
@@ -164,7 +165,7 @@ contract BT is Ownable(msg.sender) {
     pure
     {
         require(_quorum > 0, "_quorum value must be greater than null");
-        require(_guardiansLength <= MAX_GUARDIANS, "too many guardians");
+        require(_guardiansLength <= MAX_GUARDIANS, "Too many guardians");
         require(
             _guardiansLength >= _quorum,
             "_quorum should be equal to number of guardians"
@@ -174,23 +175,15 @@ contract BT is Ownable(msg.sender) {
     /**
      * @notice the weight of the validator's vote in case of repetition of the address in _guardians increases
      */
-    function setguardians(uint256 _quorum, address[] calldata _guardians)
+    function setGuardians(uint256 _quorum, address[] calldata _guardians)
     external
     correctStatus(
-    PropertyState.OwnerAlive,
+    PropertyState.OwnerActive,
     msg.sender,
-    "first confirm that you are still alive"
+    "first confirm that you are still active"
     )
     {
         checkVoteParam(_quorum, _guardians.length);
-        if (priceForChangingguardians > 0) {
-            IERC20(quoteTokenAddress).safeTransferFrom(
-                msg.sender,
-                feeAddress,
-                priceForChangingguardians
-            );
-        }
-
         Property storage userProperty = properties[msg.sender];
         // reset current voting state
         userProperty.voting.confirmed = 0;
@@ -202,7 +195,7 @@ contract BT is Ownable(msg.sender) {
     function deleteProperty() external {
         require(
             getPropertyState(msg.sender) < PropertyState.Unlocked,
-            "alive only"
+            "active only"
         );
         delete properties[msg.sender];
         emit PropertyDeleted(msg.sender);
@@ -228,8 +221,8 @@ contract BT is Ownable(msg.sender) {
             "erc20 successors and shares must be the same length"
         );
         require(
-            erc20SuccessorsLimit == 0 ||
-            erc20SuccessorsLimit >= _successors.erc20successors.length,
+            MAX_SUCCESSORS == 0 ||
+            MAX_SUCCESSORS >= _successors.erc20successors.length,
             "erc20 successors limit exceeded"
         );
 
@@ -248,14 +241,14 @@ contract BT is Ownable(msg.sender) {
     }
 
     /**
-     * @notice confirm that you are still alive
+     * @notice confirm that you are still active
      */
-    function imAlive() external {
+    function imActive() external {
         PropertyState currentState = getPropertyState(msg.sender);
         require(
-            currentState == PropertyState.OwnerAlive ||
+            currentState == PropertyState.OwnerActive ||
             currentState == PropertyState.VoteActive,
-            "state should be OwnerAlive or VoteActive or you can try to delete the property while it not confirmed"
+            "state should be OwnerActive or VoteActive or you can try to delete the property while it not confirmed"
         );
         Property memory userProperty = properties[msg.sender];
 
@@ -383,29 +376,18 @@ contract BT is Ownable(msg.sender) {
         if (userERC20Shares > 0) {
             // ERC20
             for (uint256 i = 0; i < tokens.erc20Tokens.length; i++) {
-                mapping(address => bool) storage alreadyDone = alreadyWithdrawn[
-                            propertyOwner
-                    ][msg.sender];
+                mapping(address => bool) storage alreadyDone = alreadyWithdrawn[propertyOwner][msg.sender];
                 if (alreadyDone[address(tokens.erc20Tokens[i])] == false) {
                     alreadyDone[address(tokens.erc20Tokens[i])] = true;
-                    mapping(address => uint256)
-                    storage amountPerShare = amountsPerShare[
-                                propertyOwner
-                        ];
-                    uint256 perShare = amountPerShare[
-                                    address(tokens.erc20Tokens[i])
-                        ];
+                    mapping(address => uint256) storage amountPerShare = amountsPerShare[propertyOwner];
+                    uint256 perShare = amountPerShare[address(tokens.erc20Tokens[i])];
 
                     if (perShare == 0) {
-                        uint256 propertyOwnerBalance = tokens
-                            .erc20Tokens[i]
-                            .balanceOf(propertyOwner);
-                        // tokens.erc20Tokens.length == 1 && tokens.erc20Tokens[0]) == quoteTokenAddress
-
+                        uint256 propertyOwnerBalance = tokens.erc20Tokens[i].balanceOf(propertyOwner);
                         uint256 feeAmount = (propertyOwnerBalance * FEE_BP) /
                                     BASE_POINT;
                         if (feeAmount > 0) {
-                            IERC20(quoteTokenAddress).safeTransferFrom(
+                            IERC20(tokens.erc20Tokens[i]).safeTransferFrom(
                                 propertyOwner,
                                 feeAddress,
                                 feeAmount
@@ -515,7 +497,7 @@ contract BT is Ownable(msg.sender) {
 
                 return PropertyState.NotExist;
             } else {
-                return PropertyState.OwnerAlive;
+                return PropertyState.OwnerActive;
             }
         }
 
