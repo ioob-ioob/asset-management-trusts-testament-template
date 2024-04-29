@@ -1,6 +1,4 @@
-
 // File: @openzeppelin/contracts/utils/introspection/IERC165.sol
-
 
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/introspection/IERC165.sol)
 
@@ -29,11 +27,9 @@ interface IERC165 {
 
 // File: @openzeppelin/contracts/token/ERC721/IERC721.sol
 
-
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC721/IERC721.sol)
 
 pragma solidity ^0.8.20;
-
 
 /**
  * @dev Required interface of an ERC721 compliant contract.
@@ -42,17 +38,29 @@ interface IERC721 is IERC165 {
     /**
      * @dev Emitted when `tokenId` token is transferred from `from` to `to`.
      */
-    event Transfer(address indexed from, address indexed to, uint256 indexed tokenId);
+    event Transfer(
+        address indexed from,
+        address indexed to,
+        uint256 indexed tokenId
+    );
 
     /**
      * @dev Emitted when `owner` enables `approved` to manage the `tokenId` token.
      */
-    event Approval(address indexed owner, address indexed approved, uint256 indexed tokenId);
+    event Approval(
+        address indexed owner,
+        address indexed approved,
+        uint256 indexed tokenId
+    );
 
     /**
      * @dev Emitted when `owner` enables or disables (`approved`) `operator` to manage all of its assets.
      */
-    event ApprovalForAll(address indexed owner, address indexed operator, bool approved);
+    event ApprovalForAll(
+        address indexed owner,
+        address indexed operator,
+        bool approved
+    );
 
     /**
      * @dev Returns the number of tokens in ``owner``'s account.
@@ -82,7 +90,12 @@ interface IERC721 is IERC165 {
      *
      * Emits a {Transfer} event.
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId, bytes calldata data) external;
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId,
+        bytes calldata data
+    ) external;
 
     /**
      * @dev Safely transfers `tokenId` token from `from` to `to`, checking first that contract recipients
@@ -100,7 +113,11 @@ interface IERC721 is IERC165 {
      *
      * Emits a {Transfer} event.
      */
-    function safeTransferFrom(address from, address to, uint256 tokenId) external;
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 tokenId
+    ) external;
 
     /**
      * @dev Transfers `tokenId` token from `from` to `to`.
@@ -154,23 +171,26 @@ interface IERC721 is IERC165 {
      *
      * - `tokenId` must exist.
      */
-    function getApproved(uint256 tokenId) external view returns (address operator);
+    function getApproved(
+        uint256 tokenId
+    ) external view returns (address operator);
 
     /**
      * @dev Returns if the `operator` is allowed to manage all of the assets of `owner`.
      *
      * See {setApprovalForAll}
      */
-    function isApprovedForAll(address owner, address operator) external view returns (bool);
+    function isApprovedForAll(
+        address owner,
+        address operator
+    ) external view returns (bool);
 }
 
 // File: @openzeppelin/contracts/token/ERC1155/IERC1155.sol
 
-
 // OpenZeppelin Contracts (last updated v5.0.1) (token/ERC1155/IERC1155.sol)
 
 pragma solidity ^0.8.20;
-
 
 /**
  * @dev Required interface of an ERC1155 compliant contract, as defined in the
@@ -180,7 +200,13 @@ interface IERC1155 is IERC165 {
     /**
      * @dev Emitted when `value` amount of tokens of type `id` are transferred from `from` to `to` by `operator`.
      */
-    event TransferSingle(address indexed operator, address indexed from, address indexed to, uint256 id, uint256 value);
+    event TransferSingle(
+        address indexed operator,
+        address indexed from,
+        address indexed to,
+        uint256 id,
+        uint256 value
+    );
 
     /**
      * @dev Equivalent to multiple {TransferSingle} events, where `operator`, `from` and `to` are the same for all
@@ -198,7 +224,11 @@ interface IERC1155 is IERC165 {
      * @dev Emitted when `account` grants or revokes permission to `operator` to transfer their tokens, according to
      * `approved`.
      */
-    event ApprovalForAll(address indexed account, address indexed operator, bool approved);
+    event ApprovalForAll(
+        address indexed account,
+        address indexed operator,
+        bool approved
+    );
 
     /**
      * @dev Emitted when the URI for token type `id` changes to `value`, if it is a non-programmatic URI.
@@ -216,7 +246,10 @@ interface IERC1155 is IERC165 {
      *
      * - `account` cannot be the zero address.
      */
-    function balanceOf(address account, uint256 id) external view returns (uint256);
+    function balanceOf(
+        address account,
+        uint256 id
+    ) external view returns (uint256);
 
     /**
      * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {balanceOf}.
@@ -246,7 +279,10 @@ interface IERC1155 is IERC165 {
      *
      * See {setApprovalForAll}.
      */
-    function isApprovedForAll(address account, address operator) external view returns (bool);
+    function isApprovedForAll(
+        address account,
+        address operator
+    ) external view returns (bool);
 
     /**
      * @dev Transfers a `value` amount of tokens of type `id` from `from` to `to`.
@@ -266,7 +302,13 @@ interface IERC1155 is IERC165 {
      * - If `to` refers to a smart contract, it must implement {IERC1155Receiver-onERC1155Received} and return the
      * acceptance magic value.
      */
-    function safeTransferFrom(address from, address to, uint256 id, uint256 value, bytes calldata data) external;
+    function safeTransferFrom(
+        address from,
+        address to,
+        uint256 id,
+        uint256 value,
+        bytes calldata data
+    ) external;
 
     /**
      * @dev xref:ROOT:erc1155.adoc#batch-operations[Batched] version of {safeTransferFrom}.
@@ -294,7 +336,6 @@ interface IERC1155 is IERC165 {
 }
 
 // File: @openzeppelin/contracts/utils/Context.sol
-
 
 // OpenZeppelin Contracts (last updated v5.0.1) (utils/Context.sol)
 
@@ -326,11 +367,9 @@ abstract contract Context {
 
 // File: @openzeppelin/contracts/access/Ownable.sol
 
-
 // OpenZeppelin Contracts (last updated v5.0.0) (access/Ownable.sol)
 
 pragma solidity ^0.8.20;
-
 
 /**
  * @dev Contract module which provides a basic access control mechanism, where
@@ -357,7 +396,10 @@ abstract contract Ownable is Context {
      */
     error OwnableInvalidOwner(address owner);
 
-    event OwnershipTransferred(address indexed previousOwner, address indexed newOwner);
+    event OwnershipTransferred(
+        address indexed previousOwner,
+        address indexed newOwner
+    );
 
     /**
      * @dev Initializes the contract setting the address provided by the deployer as the initial owner.
@@ -428,7 +470,6 @@ abstract contract Ownable is Context {
 
 // File: @openzeppelin/contracts/utils/Address.sol
 
-
 // OpenZeppelin Contracts (last updated v5.0.0) (utils/Address.sol)
 
 pragma solidity ^0.8.20;
@@ -497,7 +538,10 @@ library Address {
      * - `target` must be a contract.
      * - calling `target` with `data` must not revert.
      */
-    function functionCall(address target, bytes memory data) internal returns (bytes memory) {
+    function functionCall(
+        address target,
+        bytes memory data
+    ) internal returns (bytes memory) {
         return functionCallWithValue(target, data, 0);
     }
 
@@ -510,11 +554,17 @@ library Address {
      * - the calling contract must have an ETH balance of at least `value`.
      * - the called Solidity function must be `payable`.
      */
-    function functionCallWithValue(address target, bytes memory data, uint256 value) internal returns (bytes memory) {
+    function functionCallWithValue(
+        address target,
+        bytes memory data,
+        uint256 value
+    ) internal returns (bytes memory) {
         if (address(this).balance < value) {
             revert AddressInsufficientBalance(address(this));
         }
-        (bool success, bytes memory returndata) = target.call{value: value}(data);
+        (bool success, bytes memory returndata) = target.call{value: value}(
+            data
+        );
         return verifyCallResultFromTarget(target, success, returndata);
     }
 
@@ -522,7 +572,10 @@ library Address {
      * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
      * but performing a static call.
      */
-    function functionStaticCall(address target, bytes memory data) internal view returns (bytes memory) {
+    function functionStaticCall(
+        address target,
+        bytes memory data
+    ) internal view returns (bytes memory) {
         (bool success, bytes memory returndata) = target.staticcall(data);
         return verifyCallResultFromTarget(target, success, returndata);
     }
@@ -531,7 +584,10 @@ library Address {
      * @dev Same as {xref-Address-functionCall-address-bytes-}[`functionCall`],
      * but performing a delegate call.
      */
-    function functionDelegateCall(address target, bytes memory data) internal returns (bytes memory) {
+    function functionDelegateCall(
+        address target,
+        bytes memory data
+    ) internal returns (bytes memory) {
         (bool success, bytes memory returndata) = target.delegatecall(data);
         return verifyCallResultFromTarget(target, success, returndata);
     }
@@ -562,7 +618,10 @@ library Address {
      * @dev Tool to verify that a low level call was successful, and reverts if it wasn't, either by bubbling the
      * revert reason or with a default {FailedInnerCall} error.
      */
-    function verifyCallResult(bool success, bytes memory returndata) internal pure returns (bytes memory) {
+    function verifyCallResult(
+        bool success,
+        bytes memory returndata
+    ) internal pure returns (bytes memory) {
         if (!success) {
             _revert(returndata);
         } else {
@@ -589,7 +648,6 @@ library Address {
 }
 
 // File: @openzeppelin/contracts/token/ERC20/extensions/IERC20Permit.sol
-
 
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/extensions/IERC20Permit.sol)
 
@@ -683,7 +741,6 @@ interface IERC20Permit {
 
 // File: @openzeppelin/contracts/token/ERC20/IERC20.sol
 
-
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/IERC20.sol)
 
 pragma solidity ^0.8.20;
@@ -704,7 +761,11 @@ interface IERC20 {
      * @dev Emitted when the allowance of a `spender` for an `owner` is set by
      * a call to {approve}. `value` is the new allowance.
      */
-    event Approval(address indexed owner, address indexed spender, uint256 value);
+    event Approval(
+        address indexed owner,
+        address indexed spender,
+        uint256 value
+    );
 
     /**
      * @dev Returns the value of tokens in existence.
@@ -732,7 +793,10 @@ interface IERC20 {
      *
      * This value changes when {approve} or {transferFrom} are called.
      */
-    function allowance(address owner, address spender) external view returns (uint256);
+    function allowance(
+        address owner,
+        address spender
+    ) external view returns (uint256);
 
     /**
      * @dev Sets a `value` amount of tokens as the allowance of `spender` over the
@@ -760,18 +824,18 @@ interface IERC20 {
      *
      * Emits a {Transfer} event.
      */
-    function transferFrom(address from, address to, uint256 value) external returns (bool);
+    function transferFrom(
+        address from,
+        address to,
+        uint256 value
+    ) external returns (bool);
 }
 
 // File: @openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol
 
-
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/utils/SafeERC20.sol)
 
 pragma solidity ^0.8.20;
-
-
-
 
 /**
  * @title SafeERC20
@@ -793,7 +857,11 @@ library SafeERC20 {
     /**
      * @dev Indicates a failed `decreaseAllowance` request.
      */
-    error SafeERC20FailedDecreaseAllowance(address spender, uint256 currentAllowance, uint256 requestedDecrease);
+    error SafeERC20FailedDecreaseAllowance(
+        address spender,
+        uint256 currentAllowance,
+        uint256 requestedDecrease
+    );
 
     /**
      * @dev Transfer `value` amount of `token` from the calling contract to `to`. If `token` returns no value,
@@ -807,15 +875,27 @@ library SafeERC20 {
      * @dev Transfer `value` amount of `token` from `from` to `to`, spending the approval given by `from` to the
      * calling contract. If `token` returns no value, non-reverting calls are assumed to be successful.
      */
-    function safeTransferFrom(IERC20 token, address from, address to, uint256 value) internal {
-        _callOptionalReturn(token, abi.encodeCall(token.transferFrom, (from, to, value)));
+    function safeTransferFrom(
+        IERC20 token,
+        address from,
+        address to,
+        uint256 value
+    ) internal {
+        _callOptionalReturn(
+            token,
+            abi.encodeCall(token.transferFrom, (from, to, value))
+        );
     }
 
     /**
      * @dev Increase the calling contract's allowance toward `spender` by `value`. If `token` returns no value,
      * non-reverting calls are assumed to be successful.
      */
-    function safeIncreaseAllowance(IERC20 token, address spender, uint256 value) internal {
+    function safeIncreaseAllowance(
+        IERC20 token,
+        address spender,
+        uint256 value
+    ) internal {
         uint256 oldAllowance = token.allowance(address(this), spender);
         forceApprove(token, spender, oldAllowance + value);
     }
@@ -824,11 +904,19 @@ library SafeERC20 {
      * @dev Decrease the calling contract's allowance toward `spender` by `requestedDecrease`. If `token` returns no
      * value, non-reverting calls are assumed to be successful.
      */
-    function safeDecreaseAllowance(IERC20 token, address spender, uint256 requestedDecrease) internal {
+    function safeDecreaseAllowance(
+        IERC20 token,
+        address spender,
+        uint256 requestedDecrease
+    ) internal {
         unchecked {
             uint256 currentAllowance = token.allowance(address(this), spender);
             if (currentAllowance < requestedDecrease) {
-                revert SafeERC20FailedDecreaseAllowance(spender, currentAllowance, requestedDecrease);
+                revert SafeERC20FailedDecreaseAllowance(
+                    spender,
+                    currentAllowance,
+                    requestedDecrease
+                );
             }
             forceApprove(token, spender, currentAllowance - requestedDecrease);
         }
@@ -839,11 +927,21 @@ library SafeERC20 {
      * non-reverting calls are assumed to be successful. Meant to be used with tokens that require the approval
      * to be set to zero before setting it to a non-zero value, such as USDT.
      */
-    function forceApprove(IERC20 token, address spender, uint256 value) internal {
-        bytes memory approvalCall = abi.encodeCall(token.approve, (spender, value));
+    function forceApprove(
+        IERC20 token,
+        address spender,
+        uint256 value
+    ) internal {
+        bytes memory approvalCall = abi.encodeCall(
+            token.approve,
+            (spender, value)
+        );
 
         if (!_callOptionalReturnBool(token, approvalCall)) {
-            _callOptionalReturn(token, abi.encodeCall(token.approve, (spender, 0)));
+            _callOptionalReturn(
+                token,
+                abi.encodeCall(token.approve, (spender, 0))
+            );
             _callOptionalReturn(token, approvalCall);
         }
     }
@@ -873,23 +971,27 @@ library SafeERC20 {
      *
      * This is a variant of {_callOptionalReturn} that silents catches all reverts and returns a bool instead.
      */
-    function _callOptionalReturnBool(IERC20 token, bytes memory data) private returns (bool) {
+    function _callOptionalReturnBool(
+        IERC20 token,
+        bytes memory data
+    ) private returns (bool) {
         // We need to perform a low level call here, to bypass Solidity's return data size checking mechanism, since
         // we're implementing it ourselves. We cannot use {Address-functionCall} here since this should return false
         // and not revert is the subcall reverts.
 
         (bool success, bytes memory returndata) = address(token).call(data);
-        return success && (returndata.length == 0 || abi.decode(returndata, (bool))) && address(token).code.length > 0;
+        return
+            success &&
+            (returndata.length == 0 || abi.decode(returndata, (bool))) &&
+            address(token).code.length > 0;
     }
 }
 
 // File: @openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol
 
-
 // OpenZeppelin Contracts (last updated v5.0.0) (token/ERC20/extensions/IERC20Metadata.sol)
 
 pragma solidity ^0.8.20;
-
 
 /**
  * @dev Interface for the optional metadata functions from the ERC20 standard.
@@ -913,14 +1015,7 @@ interface IERC20Metadata is IERC20 {
 
 // File: contracts/5_Asset_Managment_Trusts.sol
 
-
 pragma solidity ^0.8.25;
-
-
-
-
-
-
 
 contract AMT is Ownable(msg.sender) {
     using SafeERC20 for IERC20;
@@ -972,7 +1067,7 @@ contract AMT is Ownable(msg.sender) {
     uint256 public immutable MAX_SUCCESSORS = 10;
     uint256 public immutable FEE_BP = 100; // 1%
     address public feeAddress;
-    
+
     mapping(address => Property) public properties;
     mapping(address => bool) public firstPayment;
 
@@ -980,7 +1075,7 @@ contract AMT is Ownable(msg.sender) {
     mapping(address => mapping(address => uint256)) private amountsPerShare;
     // propertyOwner   =>  successor   =>  token  => already withdrawn
     mapping(address => mapping(address => mapping(address => bool)))
-    private alreadyWithdrawn;
+        private alreadyWithdrawn;
 
     modifier correctStatus(
         PropertyState _state,
@@ -1004,7 +1099,10 @@ contract AMT is Ownable(msg.sender) {
 
     event OwnerActive(address propertyOwner, uint256 newExpirationTime);
 
-    event LostAccessConfirmed(address propertyOwner, uint256 lostAccessConfirmationTime);
+    event LostAccessConfirmed(
+        address propertyOwner,
+        uint256 lostAccessConfirmationTime
+    );
 
     event GetProperty(address propertyOwner, address successor);
 
@@ -1025,7 +1123,7 @@ contract AMT is Ownable(msg.sender) {
         MAX_SUCCESSORS = _MAX_SUCCESSORS;
         FEE_BP = _FEE_BP;
     }
-    
+
     /**
      * @param _feeAddress: new feeAddress
      */
@@ -1044,24 +1142,26 @@ contract AMT is Ownable(msg.sender) {
     /**
      * @notice assignment of successors
      */
-    function setSuccessors(Successors calldata _newSuccessors)
-    external
-    correctStatus(
-    PropertyState.OwnerActive,
-    msg.sender,
-    "First confirm that you are still active"
+    function setSuccessors(
+        Successors calldata _newSuccessors
     )
+        external
+        correctStatus(
+            PropertyState.OwnerActive,
+            msg.sender,
+            "First confirm that you are still active"
+        )
     {
         Property storage userProperty = properties[msg.sender];
 
         require(
             _newSuccessors.erc20shares.length ==
-            _newSuccessors.erc20successors.length,
+                _newSuccessors.erc20successors.length,
             "ERC20 successors and shares must be the same length"
         );
         require(
             MAX_SUCCESSORS == 0 ||
-            MAX_SUCCESSORS >= _newSuccessors.erc20successors.length,
+                MAX_SUCCESSORS >= _newSuccessors.erc20successors.length,
             "ERC20 successors limit exceeded"
         );
 
@@ -1074,10 +1174,10 @@ contract AMT is Ownable(msg.sender) {
     /**
      * @notice check validator's and quorum
      */
-    function checkVoteParam(uint256 _quorum, uint256 _guardiansLength)
-    private
-    pure
-    {
+    function checkVoteParam(
+        uint256 _quorum,
+        uint256 _guardiansLength
+    ) private pure {
         require(_quorum > 0, "_quorum value must be greater than null");
         require(_guardiansLength <= MAX_GUARDIANS, "Too many guardians");
         require(
@@ -1089,13 +1189,16 @@ contract AMT is Ownable(msg.sender) {
     /**
      * @notice the weight of the validator's vote in case of repetition of the address in _guardians increases
      */
-    function setGuardians(uint256 _quorum, address[] calldata _guardians)
-    external
-    correctStatus(
-    PropertyState.OwnerActive,
-    msg.sender,
-    "first confirm that you are still active"
+    function setGuardians(
+        uint256 _quorum,
+        address[] calldata _guardians
     )
+        external
+        correctStatus(
+            PropertyState.OwnerActive,
+            msg.sender,
+            "first confirm that you are still active"
+        )
     {
         checkVoteParam(_quorum, _guardians.length);
         Property storage userProperty = properties[msg.sender];
@@ -1126,17 +1229,17 @@ contract AMT is Ownable(msg.sender) {
         address[] calldata _guardians,
         Successors calldata _successors
     )
-    external
-    correctStatus(PropertyState.NotExist, msg.sender, "already exist")
+        external
+        correctStatus(PropertyState.NotExist, msg.sender, "already exist")
     {
         require(
             _successors.erc20shares.length ==
-            _successors.erc20successors.length,
+                _successors.erc20successors.length,
             "erc20 successors and shares must be the same length"
         );
         require(
             MAX_SUCCESSORS == 0 ||
-            MAX_SUCCESSORS >= _successors.erc20successors.length,
+                MAX_SUCCESSORS >= _successors.erc20successors.length,
             "erc20 successors limit exceeded"
         );
 
@@ -1161,14 +1264,13 @@ contract AMT is Ownable(msg.sender) {
         PropertyState currentState = getPropertyState(msg.sender);
         require(
             currentState == PropertyState.OwnerActive ||
-            currentState == PropertyState.VoteActive,
+                currentState == PropertyState.VoteActive,
             "state should be OwnerActive or VoteActive or you can try to delete the property while it not confirmed"
         );
         Property memory userProperty = properties[msg.sender];
 
         require(
-            block.timestamp >
-            (userProperty.expirationTime - MIN_PROPERTY_LOCK),
+            block.timestamp > (userProperty.expirationTime - MIN_PROPERTY_LOCK),
             "no more than two periods"
         );
         userProperty.voting.confirmed = 0;
@@ -1179,31 +1281,25 @@ contract AMT is Ownable(msg.sender) {
         emit OwnerActive(msg.sender, userProperty.expirationTime);
     }
 
-    function _getVotersCount(uint256 confirmed)
-    private
-    pure
-    returns (uint256 voiceCount)
-    {
+    function _getVotersCount(
+        uint256 confirmed
+    ) private pure returns (uint256 voiceCount) {
         while (confirmed > 0) {
             voiceCount += confirmed & 1;
             confirmed >>= 1;
         }
     }
 
-    function getVotersCount(address propertyOwner)
-    external
-    view
-    returns (uint256 voiceCount)
-    {
+    function getVotersCount(
+        address propertyOwner
+    ) external view returns (uint256 voiceCount) {
         LostAccessConfirmation memory voting = properties[propertyOwner].voting;
         voiceCount = _getVotersCount(voting.confirmed);
     }
 
-    function getVoters(address propertyOwner)
-    external
-    view
-    returns (address[] memory)
-    {
+    function getVoters(
+        address propertyOwner
+    ) external view returns (address[] memory) {
         LostAccessConfirmation memory voting = properties[propertyOwner].voting;
         address[] memory voters = new address[](voting.guardians.length);
         if (voters.length > 0 && voting.confirmed > 0) {
@@ -1222,13 +1318,15 @@ contract AMT is Ownable(msg.sender) {
         return voters;
     }
 
-    function confirmLostAccess(address propertyOwner)
-    external
-    correctStatus(
-    PropertyState.VoteActive,
-    propertyOwner,
-    "voting is not active"
+    function confirmLostAccess(
+        address propertyOwner
     )
+        external
+        correctStatus(
+            PropertyState.VoteActive,
+            propertyOwner,
+            "voting is not active"
+        )
     {
         Property storage userProperty = properties[propertyOwner];
         LostAccessConfirmation memory voting = userProperty.voting;
@@ -1269,12 +1367,12 @@ contract AMT is Ownable(msg.sender) {
         address propertyOwner,
         PropertyTokens calldata tokens
     )
-    external
-    correctStatus(
-    PropertyState.Unlocked,
-    propertyOwner,
-    "Property must be Unlocked"
-    )
+        external
+        correctStatus(
+            PropertyState.Unlocked,
+            propertyOwner,
+            "Property must be Unlocked"
+        )
     {
         Property memory userProperty = properties[propertyOwner];
         Successors memory userSuccessors = userProperty.successors;
@@ -1290,16 +1388,23 @@ contract AMT is Ownable(msg.sender) {
         if (userERC20Shares > 0) {
             // ERC20
             for (uint256 i = 0; i < tokens.erc20Tokens.length; i++) {
-                mapping(address => bool) storage alreadyDone = alreadyWithdrawn[propertyOwner][msg.sender];
+                mapping(address => bool) storage alreadyDone = alreadyWithdrawn[
+                    propertyOwner
+                ][msg.sender];
                 if (alreadyDone[address(tokens.erc20Tokens[i])] == false) {
                     alreadyDone[address(tokens.erc20Tokens[i])] = true;
-                    mapping(address => uint256) storage amountPerShare = amountsPerShare[propertyOwner];
-                    uint256 perShare = amountPerShare[address(tokens.erc20Tokens[i])];
+                    mapping(address => uint256)
+                        storage amountPerShare = amountsPerShare[propertyOwner];
+                    uint256 perShare = amountPerShare[
+                        address(tokens.erc20Tokens[i])
+                    ];
 
                     if (perShare == 0) {
-                        uint256 propertyOwnerBalance = tokens.erc20Tokens[i].balanceOf(propertyOwner);
+                        uint256 propertyOwnerBalance = tokens
+                            .erc20Tokens[i]
+                            .balanceOf(propertyOwner);
                         uint256 feeAmount = (propertyOwnerBalance * FEE_BP) /
-                                    BASE_POINT;
+                            BASE_POINT;
                         if (feeAmount > 0) {
                             IERC20(tokens.erc20Tokens[i]).safeTransferFrom(
                                 propertyOwner,
@@ -1312,7 +1417,7 @@ contract AMT is Ownable(msg.sender) {
                         if (propertyOwnerBalance > BASE_POINT) {
                             perShare = propertyOwnerBalance / BASE_POINT;
                             amountPerShare[
-                            address(tokens.erc20Tokens[i])
+                                address(tokens.erc20Tokens[i])
                             ] = perShare;
 
                             tokens.erc20Tokens[i].safeTransferFrom(
@@ -1342,10 +1447,10 @@ contract AMT is Ownable(msg.sender) {
                     x++
                 ) {
                     IERC721(tokens.erc721Tokens[i].nftAddress).safeTransferFrom(
-                        propertyOwner,
-                        msg.sender,
-                        tokens.erc721Tokens[i].ids[x]
-                    );
+                            propertyOwner,
+                            msg.sender,
+                            tokens.erc721Tokens[i].ids[x]
+                        );
                 }
             }
         }
@@ -1366,24 +1471,22 @@ contract AMT is Ownable(msg.sender) {
                     ).balanceOf(propertyOwner, tokens.erc1155Tokens[i].ids[x]);
                 }
                 IERC1155(tokens.erc1155Tokens[i].nftAddress)
-                .safeBatchTransferFrom(
-                    propertyOwner,
-                    msg.sender,
-                    tokens.erc1155Tokens[i].ids,
-                    batchBalances,
-                    ""
-                );
+                    .safeBatchTransferFrom(
+                        propertyOwner,
+                        msg.sender,
+                        tokens.erc1155Tokens[i].ids,
+                        batchBalances,
+                        ""
+                    );
             }
         }
 
         emit GetProperty(propertyOwner, msg.sender);
     }
 
-    function getPropertyState(address propertyOwner)
-    public
-    view
-    returns (PropertyState)
-    {
+    function getPropertyState(
+        address propertyOwner
+    ) public view returns (PropertyState) {
         Property memory userProperty = properties[propertyOwner];
         LostAccessConfirmation memory voting = userProperty.voting;
 

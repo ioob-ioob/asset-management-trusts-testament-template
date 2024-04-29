@@ -58,7 +58,7 @@ contract AMT is Ownable(msg.sender) {
     uint256 public immutable MAX_SUCCESSORS = 10;
     uint256 public immutable FEE_BP = 100; // 1%
     address public feeAddress;
-    
+
     mapping(address => Property) public properties;
     mapping(address => bool) public firstPayment;
 
@@ -66,7 +66,7 @@ contract AMT is Ownable(msg.sender) {
     mapping(address => mapping(address => uint256)) private amountsPerShare;
     // propertyOwner   =>  successor   =>  token  => already withdrawn
     mapping(address => mapping(address => mapping(address => bool)))
-    private alreadyWithdrawn;
+        private alreadyWithdrawn;
 
     modifier correctStatus(
         PropertyState _state,
@@ -90,7 +90,10 @@ contract AMT is Ownable(msg.sender) {
 
     event OwnerActive(address propertyOwner, uint256 newExpirationTime);
 
-    event LostAccessConfirmed(address propertyOwner, uint256 lostAccessConfirmationTime);
+    event LostAccessConfirmed(
+        address propertyOwner,
+        uint256 lostAccessConfirmationTime
+    );
 
     event GetProperty(address propertyOwner, address successor);
 
@@ -111,7 +114,7 @@ contract AMT is Ownable(msg.sender) {
         MAX_SUCCESSORS = _MAX_SUCCESSORS;
         FEE_BP = _FEE_BP;
     }
-    
+
     /**
      * @param _feeAddress: new feeAddress
      */
@@ -130,24 +133,26 @@ contract AMT is Ownable(msg.sender) {
     /**
      * @notice assignment of successors
      */
-    function setSuccessors(Successors calldata _newSuccessors)
-    external
-    correctStatus(
-    PropertyState.OwnerActive,
-    msg.sender,
-    "First confirm that you are still active"
+    function setSuccessors(
+        Successors calldata _newSuccessors
     )
+        external
+        correctStatus(
+            PropertyState.OwnerActive,
+            msg.sender,
+            "First confirm that you are still active"
+        )
     {
         Property storage userProperty = properties[msg.sender];
 
         require(
             _newSuccessors.erc20shares.length ==
-            _newSuccessors.erc20successors.length,
+                _newSuccessors.erc20successors.length,
             "ERC20 successors and shares must be the same length"
         );
         require(
             MAX_SUCCESSORS == 0 ||
-            MAX_SUCCESSORS >= _newSuccessors.erc20successors.length,
+                MAX_SUCCESSORS >= _newSuccessors.erc20successors.length,
             "ERC20 successors limit exceeded"
         );
 
@@ -160,10 +165,10 @@ contract AMT is Ownable(msg.sender) {
     /**
      * @notice check validator's and quorum
      */
-    function checkVoteParam(uint256 _quorum, uint256 _guardiansLength)
-    private
-    pure
-    {
+    function checkVoteParam(
+        uint256 _quorum,
+        uint256 _guardiansLength
+    ) private pure {
         require(_quorum > 0, "_quorum value must be greater than null");
         require(_guardiansLength <= MAX_GUARDIANS, "Too many guardians");
         require(
@@ -175,13 +180,16 @@ contract AMT is Ownable(msg.sender) {
     /**
      * @notice the weight of the validator's vote in case of repetition of the address in _guardians increases
      */
-    function setGuardians(uint256 _quorum, address[] calldata _guardians)
-    external
-    correctStatus(
-    PropertyState.OwnerActive,
-    msg.sender,
-    "first confirm that you are still active"
+    function setGuardians(
+        uint256 _quorum,
+        address[] calldata _guardians
     )
+        external
+        correctStatus(
+            PropertyState.OwnerActive,
+            msg.sender,
+            "first confirm that you are still active"
+        )
     {
         checkVoteParam(_quorum, _guardians.length);
         Property storage userProperty = properties[msg.sender];
@@ -212,17 +220,17 @@ contract AMT is Ownable(msg.sender) {
         address[] calldata _guardians,
         Successors calldata _successors
     )
-    external
-    correctStatus(PropertyState.NotExist, msg.sender, "already exist")
+        external
+        correctStatus(PropertyState.NotExist, msg.sender, "already exist")
     {
         require(
             _successors.erc20shares.length ==
-            _successors.erc20successors.length,
+                _successors.erc20successors.length,
             "erc20 successors and shares must be the same length"
         );
         require(
             MAX_SUCCESSORS == 0 ||
-            MAX_SUCCESSORS >= _successors.erc20successors.length,
+                MAX_SUCCESSORS >= _successors.erc20successors.length,
             "erc20 successors limit exceeded"
         );
 
@@ -247,14 +255,13 @@ contract AMT is Ownable(msg.sender) {
         PropertyState currentState = getPropertyState(msg.sender);
         require(
             currentState == PropertyState.OwnerActive ||
-            currentState == PropertyState.VoteActive,
+                currentState == PropertyState.VoteActive,
             "state should be OwnerActive or VoteActive or you can try to delete the property while it not confirmed"
         );
         Property memory userProperty = properties[msg.sender];
 
         require(
-            block.timestamp >
-            (userProperty.expirationTime - MIN_PROPERTY_LOCK),
+            block.timestamp > (userProperty.expirationTime - MIN_PROPERTY_LOCK),
             "no more than two periods"
         );
         userProperty.voting.confirmed = 0;
@@ -265,31 +272,25 @@ contract AMT is Ownable(msg.sender) {
         emit OwnerActive(msg.sender, userProperty.expirationTime);
     }
 
-    function _getVotersCount(uint256 confirmed)
-    private
-    pure
-    returns (uint256 voiceCount)
-    {
+    function _getVotersCount(
+        uint256 confirmed
+    ) private pure returns (uint256 voiceCount) {
         while (confirmed > 0) {
             voiceCount += confirmed & 1;
             confirmed >>= 1;
         }
     }
 
-    function getVotersCount(address propertyOwner)
-    external
-    view
-    returns (uint256 voiceCount)
-    {
+    function getVotersCount(
+        address propertyOwner
+    ) external view returns (uint256 voiceCount) {
         LostAccessConfirmation memory voting = properties[propertyOwner].voting;
         voiceCount = _getVotersCount(voting.confirmed);
     }
 
-    function getVoters(address propertyOwner)
-    external
-    view
-    returns (address[] memory)
-    {
+    function getVoters(
+        address propertyOwner
+    ) external view returns (address[] memory) {
         LostAccessConfirmation memory voting = properties[propertyOwner].voting;
         address[] memory voters = new address[](voting.guardians.length);
         if (voters.length > 0 && voting.confirmed > 0) {
@@ -308,13 +309,15 @@ contract AMT is Ownable(msg.sender) {
         return voters;
     }
 
-    function confirmLostAccess(address propertyOwner)
-    external
-    correctStatus(
-    PropertyState.VoteActive,
-    propertyOwner,
-    "voting is not active"
+    function confirmLostAccess(
+        address propertyOwner
     )
+        external
+        correctStatus(
+            PropertyState.VoteActive,
+            propertyOwner,
+            "voting is not active"
+        )
     {
         Property storage userProperty = properties[propertyOwner];
         LostAccessConfirmation memory voting = userProperty.voting;
@@ -355,12 +358,12 @@ contract AMT is Ownable(msg.sender) {
         address propertyOwner,
         PropertyTokens calldata tokens
     )
-    external
-    correctStatus(
-    PropertyState.Unlocked,
-    propertyOwner,
-    "Property must be Unlocked"
-    )
+        external
+        correctStatus(
+            PropertyState.Unlocked,
+            propertyOwner,
+            "Property must be Unlocked"
+        )
     {
         Property memory userProperty = properties[propertyOwner];
         Successors memory userSuccessors = userProperty.successors;
@@ -376,16 +379,23 @@ contract AMT is Ownable(msg.sender) {
         if (userERC20Shares > 0) {
             // ERC20
             for (uint256 i = 0; i < tokens.erc20Tokens.length; i++) {
-                mapping(address => bool) storage alreadyDone = alreadyWithdrawn[propertyOwner][msg.sender];
+                mapping(address => bool) storage alreadyDone = alreadyWithdrawn[
+                    propertyOwner
+                ][msg.sender];
                 if (alreadyDone[address(tokens.erc20Tokens[i])] == false) {
                     alreadyDone[address(tokens.erc20Tokens[i])] = true;
-                    mapping(address => uint256) storage amountPerShare = amountsPerShare[propertyOwner];
-                    uint256 perShare = amountPerShare[address(tokens.erc20Tokens[i])];
+                    mapping(address => uint256)
+                        storage amountPerShare = amountsPerShare[propertyOwner];
+                    uint256 perShare = amountPerShare[
+                        address(tokens.erc20Tokens[i])
+                    ];
 
                     if (perShare == 0) {
-                        uint256 propertyOwnerBalance = tokens.erc20Tokens[i].balanceOf(propertyOwner);
+                        uint256 propertyOwnerBalance = tokens
+                            .erc20Tokens[i]
+                            .balanceOf(propertyOwner);
                         uint256 feeAmount = (propertyOwnerBalance * FEE_BP) /
-                                    BASE_POINT;
+                            BASE_POINT;
                         if (feeAmount > 0) {
                             IERC20(tokens.erc20Tokens[i]).safeTransferFrom(
                                 propertyOwner,
@@ -398,7 +408,7 @@ contract AMT is Ownable(msg.sender) {
                         if (propertyOwnerBalance > BASE_POINT) {
                             perShare = propertyOwnerBalance / BASE_POINT;
                             amountPerShare[
-                            address(tokens.erc20Tokens[i])
+                                address(tokens.erc20Tokens[i])
                             ] = perShare;
 
                             tokens.erc20Tokens[i].safeTransferFrom(
@@ -428,10 +438,10 @@ contract AMT is Ownable(msg.sender) {
                     x++
                 ) {
                     IERC721(tokens.erc721Tokens[i].nftAddress).safeTransferFrom(
-                        propertyOwner,
-                        msg.sender,
-                        tokens.erc721Tokens[i].ids[x]
-                    );
+                            propertyOwner,
+                            msg.sender,
+                            tokens.erc721Tokens[i].ids[x]
+                        );
                 }
             }
         }
@@ -452,24 +462,22 @@ contract AMT is Ownable(msg.sender) {
                     ).balanceOf(propertyOwner, tokens.erc1155Tokens[i].ids[x]);
                 }
                 IERC1155(tokens.erc1155Tokens[i].nftAddress)
-                .safeBatchTransferFrom(
-                    propertyOwner,
-                    msg.sender,
-                    tokens.erc1155Tokens[i].ids,
-                    batchBalances,
-                    ""
-                );
+                    .safeBatchTransferFrom(
+                        propertyOwner,
+                        msg.sender,
+                        tokens.erc1155Tokens[i].ids,
+                        batchBalances,
+                        ""
+                    );
             }
         }
 
         emit GetProperty(propertyOwner, msg.sender);
     }
 
-    function getPropertyState(address propertyOwner)
-    public
-    view
-    returns (PropertyState)
-    {
+    function getPropertyState(
+        address propertyOwner
+    ) public view returns (PropertyState) {
         Property memory userProperty = properties[propertyOwner];
         LostAccessConfirmation memory voting = userProperty.voting;
 
