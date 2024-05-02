@@ -72,5 +72,8 @@ The contract provides functionalities for assigning successors, initiating votin
 
 - Allow contract to spend your ERC20, ERC720, ERC1155 is safe cause only owner can set successors for their property
 - Our first implementation with the merkle trees to save heirs in testament contract was well tested, but since we simplified it, we didn't have time to rewrite the tests. Since the logic remained similar, the contract should meet the security requirements.
+- 86.22/100 ([solidityscan.com](https://solidityscan.com/))
 
-![alt text](image.png)
+  ![alt text](imgs/solscan.png)
+
+  ![alt text](imgs/image.png)

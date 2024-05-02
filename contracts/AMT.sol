@@ -8,6 +8,10 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "@openzeppelin/contracts/token/ERC1155/IERC1155.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
+/**
+ * @title AMT (Asset Management Toolkit)
+ * @dev A smart contract for managing assets including ERC20 tokens, ERC721, and ERC1155 tokens.
+ */
 contract AMT is Ownable(msg.sender) {
     using SafeERC20 for IERC20;
 
@@ -26,7 +30,7 @@ contract AMT is Ownable(msg.sender) {
         address nft721successor; // nft721 tokens receiver
         address nft1155successor; // nft1155 tokens receiver
         address[] erc20successors; // array of erc20 tokens receivers
-        uint256[] erc20shares; //array of erc20 tokens shares corresponding to erc20successors
+        uint256[] erc20shares; // array of erc20 tokens shares corresponding to erc20successors
     }
 
     struct LostAccessConfirmation {
@@ -68,6 +72,12 @@ contract AMT is Ownable(msg.sender) {
     mapping(address => mapping(address => mapping(address => bool)))
         private alreadyWithdrawn;
 
+    /**
+     * @dev Modifier to check the current status of the property.
+     * @param _state The expected state of the property.
+     * @param _propertyOwner The owner of the property.
+     * @param _error Error message to display if the status check fails.
+     */
     modifier correctStatus(
         PropertyState _state,
         address _propertyOwner,
@@ -77,26 +87,72 @@ contract AMT is Ownable(msg.sender) {
         _;
     }
 
+    /**
+     * @dev Emitted when successors are changed for a property.
+     * @param propertyOwner The owner of the property.
+     * @param newSuccessors The updated successors.
+     */
     event SuccessorsChanged(address propertyOwner, Successors newSuccessors);
+
+    /**
+     * @dev Emitted when a property is deleted.
+     * @param propertyOwner The owner of the property.
+     */
     event PropertyDeleted(address propertyOwner);
 
+    /**
+     * @dev Emitted when guardians are changed for a property.
+     * @param user The owner of the property.
+     * @param newVoteQuorum The updated vote quorum.
+     * @param newGuardians The updated list of guardians.
+     */
     event GuardiansChanged(
         address user,
         uint256 newVoteQuorum,
         address[] newGuardians
     );
 
+    /**
+     * @dev Emitted when a new property is created.
+     * @param user The owner of the property.
+     * @param newProperty The details of the new property.
+     */
     event CreateProperty(address user, Property newProperty);
 
+    /**
+     * @dev Emitted when a property owner is active.
+     * @param propertyOwner The owner of the property.
+     * @param newExpirationTime The updated expiration time of the property.
+     */
     event OwnerActive(address propertyOwner, uint256 newExpirationTime);
 
+    /**
+     * @dev Emitted when lost access to a property is confirmed.
+     * @param propertyOwner The owner of the property.
+     * @param lostAccessConfirmationTime The time when lost access is confirmed.
+     */
     event LostAccessConfirmed(
         address propertyOwner,
         uint256 lostAccessConfirmationTime
     );
 
+    /**
+     * @dev Emitted when a successor retrieves property assets.
+     * @param propertyOwner The owner of the property.
+     * @param successor The successor who retrieves the property assets.
+     */
     event GetProperty(address propertyOwner, address successor);
 
+    /**
+     * @dev Constructor to initialize contract parameters.
+     * @param _feeAddress The address to receive fees.
+     * @param _CONFIRMATION_LOCK Period where owner can proof that he active
+     * @param _MIN_PROPERTY_LOCK Minimum period to lock property
+     * @param _CONTINGENCY_PERIOD After that period if quorum property can be shared
+     * @param _MAX_GUARDIANS Max of guardians
+     * @param _MAX_SUCCESSORS Max of successors
+     * @param _FEE_BP % fee of that service
+     */
     constructor(
         address _feeAddress,
         uint256 _CONFIRMATION_LOCK,
@@ -116,22 +172,29 @@ contract AMT is Ownable(msg.sender) {
     }
 
     /**
-     * @param _feeAddress: new feeAddress
+     * @dev Sets the fee address.
+     * @param _feeAddress The new fee address.
      */
     function setFeeAddress(address _feeAddress) external onlyOwner {
         feeAddress = _feeAddress;
     }
 
+
+    /**
+     * @dev Check shares sum it should not be greater than 10000 (BASE_POINT).
+     * @param _erc20shares array of erc20shares.
+     */
     function checkSharesSUM(uint256[] memory _erc20shares) private pure {
         uint256 sharesSum;
         for (uint256 i = 0; i < _erc20shares.length; i++) {
             sharesSum += _erc20shares[i];
         }
-        require(sharesSum == BASE_POINT, "incorrect shares sum");
+        require(sharesSum == BASE_POINT, "AMT: Incorrect shares sum");
     }
 
     /**
-     * @notice assignment of successors
+     * @dev Sets the successors for a property.
+     * @param _newSuccessors The new successors for the property.
      */
     function setSuccessors(
         Successors calldata _newSuccessors
@@ -148,12 +211,12 @@ contract AMT is Ownable(msg.sender) {
         require(
             _newSuccessors.erc20shares.length ==
                 _newSuccessors.erc20successors.length,
-            "ERC20 successors and shares must be the same length"
+            "AMT: ERC20 successors and shares must be the same length"
         );
         require(
             MAX_SUCCESSORS == 0 ||
                 MAX_SUCCESSORS >= _newSuccessors.erc20successors.length,
-            "ERC20 successors limit exceeded"
+            "AMT: ERC20 successors limit exceeded"
         );
 
         checkSharesSUM(_newSuccessors.erc20shares);
@@ -162,23 +225,27 @@ contract AMT is Ownable(msg.sender) {
         emit SuccessorsChanged(msg.sender, _newSuccessors);
     }
 
-    /**
-     * @notice check validator's and quorum
+   /**
+     * @dev Checks the parameters for setting guardians.
+     * @param _quorum The voting quorum.
+     * @param _guardians An array of guardians.
      */
     function checkVoteParam(
         uint256 _quorum,
         uint256 _guardiansLength
     ) private pure {
-        require(_quorum > 0, "_quorum value must be greater than null");
-        require(_guardiansLength <= MAX_GUARDIANS, "Too many guardians");
+        require(_quorum > 0, "AMT: _quorum value must be greater than null");
+        require(_guardiansLength <= MAX_GUARDIANS, "AMT: Too many guardians");
         require(
             _guardiansLength >= _quorum,
-            "_quorum should be equal to number of guardians"
+            "AMT: _quorum should be equal to number of guardians"
         );
     }
 
-    /**
-     * @notice the weight of the validator's vote in case of repetition of the address in _guardians increases
+   /**
+     * @dev Sets the guardians for a property.
+     * @param _quorum The voting quorum.
+     * @param _guardians An array of guardians.
      */
     function setGuardians(
         uint256 _quorum,
@@ -200,10 +267,13 @@ contract AMT is Ownable(msg.sender) {
         emit GuardiansChanged(msg.sender, _quorum, _guardians);
     }
 
+    /**
+     * @dev Deletes a property.
+     */
     function deleteProperty() external {
         require(
             getPropertyState(msg.sender) < PropertyState.Unlocked,
-            "active only"
+            "AMT: Active only"
         );
         delete properties[msg.sender];
         emit PropertyDeleted(msg.sender);
@@ -226,12 +296,12 @@ contract AMT is Ownable(msg.sender) {
         require(
             _successors.erc20shares.length ==
                 _successors.erc20successors.length,
-            "erc20 successors and shares must be the same length"
+            "AMT: ERC20 successors and shares must be the same length"
         );
         require(
             MAX_SUCCESSORS == 0 ||
                 MAX_SUCCESSORS >= _successors.erc20successors.length,
-            "erc20 successors limit exceeded"
+            "AMT: ERC20 successors limit exceeded"
         );
 
         checkVoteParam(_quorum, _guardians.length);
@@ -249,20 +319,20 @@ contract AMT is Ownable(msg.sender) {
     }
 
     /**
-     * @notice confirm that you are still active
+     * @dev Confirms that the property owner is still active.
      */
     function imActive() external {
         PropertyState currentState = getPropertyState(msg.sender);
         require(
             currentState == PropertyState.OwnerActive ||
                 currentState == PropertyState.VoteActive,
-            "state should be OwnerActive or VoteActive or you can try to delete the property while it not confirmed"
+            "AMT: State should be OwnerActive or VoteActive or you can try to delete the property while it not confirmed"
         );
         Property memory userProperty = properties[msg.sender];
 
         require(
             block.timestamp > (userProperty.expirationTime - MIN_PROPERTY_LOCK),
-            "no more than two periods"
+            "AMT: No more than two periods"
         );
         userProperty.voting.confirmed = 0;
         userProperty.expirationTime += MIN_PROPERTY_LOCK;
@@ -281,6 +351,10 @@ contract AMT is Ownable(msg.sender) {
         }
     }
 
+    /**
+     * @dev Gets the count of voters for a property.
+     * @param propertyOwner The owner of the property.
+     */
     function getVotersCount(
         address propertyOwner
     ) external view returns (uint256 voiceCount) {
@@ -288,6 +362,11 @@ contract AMT is Ownable(msg.sender) {
         voiceCount = _getVotersCount(voting.confirmed);
     }
 
+    /**
+     * @dev Gets the voters for a property.
+     * @param propertyOwner The owner of the property.
+     * @return An array of voters' addresses.
+     */
     function getVoters(
         address propertyOwner
     ) external view returns (address[] memory) {
@@ -309,6 +388,10 @@ contract AMT is Ownable(msg.sender) {
         return voters;
     }
 
+     /**
+     * @dev Confirms lost access to a property.
+     * @param propertyOwner The owner of the property.
+     */
     function confirmLostAccess(
         address propertyOwner
     )
@@ -353,7 +436,6 @@ contract AMT is Ownable(msg.sender) {
      * erc721Tokens: array of {address nftAddress;uint256[] ids;} objects
      * erc1155Tokens: array of {address nftAddress;uint256[] ids;} objects
      */
-
     function withdrawProperty(
         address propertyOwner,
         PropertyTokens calldata tokens
@@ -475,6 +557,11 @@ contract AMT is Ownable(msg.sender) {
         emit GetProperty(propertyOwner, msg.sender);
     }
 
+    /**
+     * @dev Gets the state of a property.
+     * @param propertyOwner The owner of the property.
+     * @return The state of the property.
+     */
     function getPropertyState(
         address propertyOwner
     ) public view returns (PropertyState) {
