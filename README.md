@@ -4,6 +4,8 @@
 
 [Contract Review Document](https://docs.google.com/document/d/1dMzREk22NHCXxLXIE8LhBCPNNVVeEPutTdZXubmmgEI/edit?usp=sharing)
 
+[Figma file](https://www.figma.com/file/llMxOR11X2Z2tp8tXCrjwo/ioob?type=design&node-id=3504%3A4607&mode=design&t=qmJMIoMY9UnXs0Y9-1)
+
 ## Overview
 
 The AMT (Asset Management Token) contract is designed to facilitate the management and transfer of various assets, including ERC20 tokens, ERC721 tokens, and ERC1155 tokens, in various of cases:
