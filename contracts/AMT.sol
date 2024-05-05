@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.25;
+pragma solidity ^0.8.23;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/token/ERC20/extensions/IERC20Metadata.sol";
@@ -179,7 +179,6 @@ contract AMT is Ownable(msg.sender) {
         feeAddress = _feeAddress;
     }
 
-
     /**
      * @dev Check shares sum it should not be greater than 10000 (BASE_POINT).
      * @param _erc20shares array of erc20shares.
@@ -225,7 +224,7 @@ contract AMT is Ownable(msg.sender) {
         emit SuccessorsChanged(msg.sender, _newSuccessors);
     }
 
-   /**
+    /**
      * @dev Checks the parameters for setting guardians.
      * @param _quorum The voting quorum.
      * @param _guardians An array of guardians.
@@ -242,7 +241,7 @@ contract AMT is Ownable(msg.sender) {
         );
     }
 
-   /**
+    /**
      * @dev Sets the guardians for a property.
      * @param _quorum The voting quorum.
      * @param _guardians An array of guardians.
@@ -388,7 +387,7 @@ contract AMT is Ownable(msg.sender) {
         return voters;
     }
 
-     /**
+    /**
      * @dev Confirms lost access to a property.
      * @param propertyOwner The owner of the property.
      */
