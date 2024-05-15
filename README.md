@@ -6,6 +6,8 @@
 
 [Figma file](https://www.figma.com/file/llMxOR11X2Z2tp8tXCrjwo/ioob?type=design&node-id=3504%3A4607&mode=design&t=qmJMIoMY9UnXs0Y9-1)
 
+[Forward App](https://amt2.test.forwardfactory.ai/subdomain) | [Forward Template](https://test.forwardfactory.ai/services/marketplace/description/400c009d-ad23-4147-adf8-854115000ff6) | [Video guide](https://youtu.be/j3RkxpURJsE)
+
 ## Overview
 
 The AMT (Asset Management Token) contract is designed to facilitate the management and transfer of various assets, including ERC20 tokens, ERC721 tokens, and ERC1155 tokens, in various of cases:

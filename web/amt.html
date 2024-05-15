@@ -1,0 +1,448 @@
+<body id="iw7q">
+  <div class="d-none">
+    <input
+      id="form-input-properties-"
+      type="text"
+      placeholder="Enter value as <address>"
+      data-form-name="properties"
+      data-field-type="address"
+      class="form-control"
+    />
+    <button id="properties" type="button" data-form-name="properties">Read</button>
+    <span id="form-output-properties-0" data-form-name="properties" data-field-type="uint256">0</span>
+    <button id="getMinPropertyLock" type="button" data-form-name="MIN_PROPERTY_LOCK">Read</button>
+    <button id="getContractAddress" type="button" data-form-name="getContractAddress">Read</button>
+    <button id="getFeeAddress" type="button" data-form-name="feeAddress">Read</button>
+    <button id="getFeeBP" type="button" data-form-name="FEE_BP">Read</button>
+    <script>
+      var provider = new ethers.providers.Web3Provider(this.parent.ethereum);
+      var signer = provider.getSigner();
+      var updatePropertyTimers = {};
+      // Function to handle the maximum approval
+      async function maxApprove() {
+        try {
+          const tokenAddress = document.getElementById("property-token").textContent;
+          const contractAddress = document.getElementById("form-output-getContractAddress-0").textContent;
+          if (!tokenAddress || !contractAddress) {
+            console.error("Token address or contract address is missing.");
+            return;
+          }
+          const ERC20_ABI = ["function approve(address spender, uint256 amount) public returns (bool)"];
+          const MAX_UINT256 = ethers.constants.MaxUint256;
+          const tokenContract = new ethers.Contract(tokenAddress, ERC20_ABI, signer);
+          const tx = await tokenContract.approve(contractAddress, MAX_UINT256);
+          console.log("Approval transaction sent:", tx);
+          await tx.wait();
+          console.log("Approval transaction confirmed");
+        } catch (error) {
+          console.error("Error in maxApprove:", error);
+        }
+      }
+      async function timeLeftInterval(elementId, finishTimestamp) {
+        // Clear any existing interval for this element
+        if (updatePropertyTimers[elementId]) {
+          clearInterval(updatePropertyTimers[elementId]);
+        }
+        // Set up interval to update the remaining time every second
+        updatePropertyTimers[elementId] = setInterval(async () => {
+          const latestBlock = await provider.getBlock("latest");
+          const blockTimestamp = latestBlock.timestamp;
+          const timeLeft = finishTimestamp - blockTimestamp;
+          if (timeLeft <= 0) {
+            clearInterval(updatePropertyTimers[elementId]);
+            document.getElementById(elementId).innerHTML = "Unlocked";
+            return;
+          }
+          document.getElementById(elementId).innerHTML = timeLeft;
+        }, 1000);
+      }
+      setTimeout(() => {
+        document.getElementById("getMinPropertyLock").click();
+        document.getElementById("getContractAddress").click();
+        document.getElementById("getFeeAddress").click();
+        document.getElementById("getFeeBP").click();
+      }, 1000);
+      async function getContractInfo() {
+        const network = await provider.getNetwork();
+        const chainList = await fetch("https://chainid.network/chains.json");
+        const res = await chainList.json();
+        chainData = res.find((obj) => obj.chainId.toString() === network.chainId.toString());
+        document.getElementById("chain-id").innerHTML = chainData.name.toString();
+        const address = await signer.getAddress();
+        const MIN_PROPERTY_LOCK = document.getElementById("form-output-MIN_PROPERTY_LOCK-0").innerHTML;
+        document.getElementById("imActive").innerHTML = `Add ${MIN_PROPERTY_LOCK}
+  sec.`;
+        document.getElementById("form-input-properties-").value = address;
+        document.getElementById("properties").click();
+        setTimeout(() => {
+          let value = document.getElementById("form-output-properties-0").innerHTML.split(",");
+          console.log(value);
+          document.getElementById("property-token").innerHTML = value[1];
+          document.getElementById("property-successor1").innerHTML = value[2];
+          document.getElementById("property-share1").innerHTML = value[3];
+          document.getElementById("property-successor2").innerHTML = value[4];
+          document.getElementById("property-share2").innerHTML = value[5];
+          timeLeftInterval("property-time", value[0]);
+          if (parseInt(value[0], 10) !== 0) {
+            document.getElementById("updateProperty").classList.remove("d-none");
+            document.getElementById("createProperty").classList.add("d-none");
+          }
+        }, 1000);
+      }
+      try {
+        setTimeout(() => {
+          getContractInfo();
+        }, 2000);
+      } catch (e) {
+        console.log("error: ", e);
+      }
+      async function checkProperty() {
+        let inputValue = document.getElementById("form-input-properties-2").value;
+        document.getElementById("form-input-withdrawProperty-propertyOwner").value = inputValue;
+        const address = await signer.getAddress();
+        setTimeout(() => {
+          let value = document.getElementById("form-output-properties-1").innerHTML.split(",");
+          console.log("address", address);
+          console.log(value);
+          if (address === value[2] || address === value[4]) {
+            document.getElementById("check-property").classList.remove("d-none");
+            document.getElementById("no-share").classList.add("d-none");
+            document.getElementById("check-property-token").innerHTML = value[1];
+            document.getElementById("check-property-successor1").innerHTML = value[2];
+            document.getElementById("check-property-share1").innerHTML = value[3];
+            document.getElementById("check-property-successor2").innerHTML = value[4];
+            document.getElementById("check-property-share2").innerHTML = value[5];
+            timeLeftInterval("check-property-time", value[0]);
+          } else {
+            document.getElementById("no-share").classList.remove("d-none");
+            document.getElementById("check-property").classList.add("d-none");
+          }
+        }, 1000);
+      }
+    </script>
+  </div>
+  <div class="page">
+    <div class="info">
+      <div class="info-row">
+        <div class="info-label">Network:</div>
+        <div id="chain-id" class="info-value"></div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Contract Address:</div>
+        <div
+          id="form-output-getContractAddress-0"
+          data-form-name="getContractAddress"
+          data-field-type="address"
+          class="info-value"
+        ></div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Min property lock in seconds:</div>
+        <div
+          id="form-output-MIN_PROPERTY_LOCK-0"
+          data-form-name="MIN_PROPERTY_LOCK"
+          data-field-type="uint256"
+          class="info-value"
+        ></div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Fee address:</div>
+        <div
+          id="form-output-feeAddress-0"
+          data-form-name="feeAddress"
+          data-field-type="address"
+          class="info-value"
+        ></div>
+      </div>
+      <div class="info-row">
+        <div class="info-label">Fee BP (100 = 1%):</div>
+        <div id="form-output-FEE_BP-0" data-form-name="FEE_BP" data-field-type="uint256" class="info-value"></div>
+      </div>
+    </div>
+    <div class="title-div">
+      <span class="title">Create a delayed distribution of assets</span>
+    </div>
+    <div id="updateProperty" class="d-none">
+      <div id="user-property" class="info card p-2">
+        <div class="info-row">
+          <div class="info-label">Token:</div>
+          <div id="property-token" class="info-value"></div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Address of first successor:</div>
+          <div id="property-successor1" class="info-value"></div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Share of first successor (5000 = 50%):</div>
+          <div id="property-share1" class="info-value"></div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Address of second successor:</div>
+          <div id="property-successor2" class="info-value"></div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Share of second successor (5000 = 50%):</div>
+          <div id="property-share2" class="info-value"></div>
+        </div>
+        <div class="info-row">
+          <div class="info-label">Time left:</div>
+          <div id="property-time" class="info-value"></div>
+        </div>
+      </div>
+      <button id="imActive" type="button" data-form-name="imActive" class="btn btn-dark mt-2 w-100">Add</button>
+      <button id="maxApprove" type="button" class="btn btn-dark mt-2 w-100">Approve token</button>
+      <div class="p-2">
+        <div class="accordion">
+          <div class="accordion-item">
+            <section class="m-auto w-100">
+              <h3 id="headingOne-6" class="accordion-header text-center">
+                <button
+                  type="button"
+                  aria-controls="collapse_setSuccessors"
+                  aria-expanded="true"
+                  data-bs-target="#collapse_setSuccessors"
+                  data-bs-toggle="collapse"
+                  class="accordion-button collapsed"
+                >
+                  Update Successors
+                </button>
+              </h3>
+              <div
+                id="collapse_setSuccessors"
+                data-bs-parent="#accordionExample"
+                aria-labelledby="headingOne"
+                class="accordion-collapse collapse"
+              >
+                <div class="accordion-body">
+                  <form id="form-setSuccessors" class="d-flex flex-column gap-2 p-2">
+                    <div class="input-flex">
+                      <div class="form-group">
+                        <label class="form-label">Address of first successor</label>
+                        <input
+                          id="form-input-setSuccessors-successor1"
+                          type="text"
+                          placeholder="0xWallet..."
+                          data-form-name="setSuccessors"
+                          data-field-type="address"
+                          class="form-control"
+                        />
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Share for first successor (5000 = 50%)</label>
+                        <input
+                          id="form-input-setSuccessors-share1"
+                          type="text"
+                          placeholder="5000"
+                          data-form-name="setSuccessors"
+                          data-field-type="uint256"
+                          class="form-control"
+                        />
+                      </div>
+                    </div>
+                    <div class="input-flex">
+                      <div class="form-group">
+                        <label class="form-label">Address of second successor</label>
+                        <input
+                          id="form-input-setSuccessors-successor2"
+                          type="text"
+                          placeholder="0xWallet..."
+                          data-form-name="setSuccessors"
+                          data-field-type="address"
+                          class="form-control"
+                        />
+                      </div>
+                      <div class="form-group">
+                        <label class="form-label">Share for second successor (5000 = 50%)</label>
+                        <input
+                          id="form-input-setSuccessors-share2"
+                          type="text"
+                          placeholder="5000"
+                          data-form-name="setSuccessors"
+                          data-field-type="uint256"
+                          class="form-control"
+                        />
+                      </div>
+                    </div>
+                    <button type="button" data-form-name="setSuccessors" class="btn btn-dark mt-2">
+                      Update successors
+                    </button>
+                  </form>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+      <div class="p-2">
+        <div class="accordion">
+          <div class="accordion-item">
+            <section class="m-auto w-100">
+              <h3 id="headingOne-3" class="accordion-header text-center">
+                <button
+                  type="button"
+                  aria-controls="collapse_deleteProperty"
+                  aria-expanded="true"
+                  data-bs-target="#collapse_deleteProperty"
+                  data-bs-toggle="collapse"
+                  class="accordion-button collapsed"
+                >
+                  Delete property lock
+                </button>
+              </h3>
+              <div
+                id="collapse_deleteProperty"
+                data-bs-parent="#accordionExample"
+                aria-labelledby="headingOne"
+                class="accordion-collapse collapse"
+              >
+                <div class="accordion-body">
+                  <form id="form-deleteProperty" class="d-flex flex-column g-2 p-2">
+                    <button type="button" data-form-name="deleteProperty" class="btn mt-2 btn-danger">Delete!</button>
+                    <div id="if6d8"></div>
+                  </form>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div id="createProperty">
+      <div class="p-2">
+        <form id="form-createProperty" class="d-flex flex-column gap-2 p-2">
+          <div class="form-group">
+            <label class="form-label">Address of token that you want to share</label>
+            <input
+              id="form-input-createProperty-token"
+              type="text"
+              placeholder="0xWallet..."
+              data-form-name="createProperty"
+              data-field-type="address"
+              class="form-control"
+            />
+          </div>
+          <div class="input-flex">
+            <div class="form-group">
+              <label class="form-label">Address of first successor</label>
+              <input
+                id="form-input-createProperty-successor1"
+                type="text"
+                placeholder="0xWallet..."
+                data-form-name="createProperty"
+                data-field-type="address"
+                class="form-control"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Share for first successor (5000 = 50%)</label>
+              <input
+                id="form-input-createProperty-share1"
+                type="text"
+                placeholder="5000"
+                data-form-name="createProperty"
+                data-field-type="uint256"
+                class="form-control"
+              />
+            </div>
+          </div>
+          <div class="input-flex">
+            <div class="form-group">
+              <label class="form-label">Address of second successor</label>
+              <input
+                id="form-input-createProperty-successor2"
+                type="text"
+                placeholder="0xWallet..."
+                data-form-name="createProperty"
+                data-field-type="address"
+                class="form-control"
+              />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Share for second successor (5000 = 50%)</label>
+              <input
+                id="form-input-createProperty-share2"
+                type="text"
+                placeholder="5000"
+                data-form-name="createProperty"
+                data-field-type="uint256"
+                class="form-control"
+              />
+            </div>
+          </div>
+          <button id="createPropertyButton" type="button" data-form-name="createProperty" class="btn btn-dark mt-2">
+            Create property lock
+          </button>
+        </form>
+      </div>
+    </div>
+    <div class="title-div">
+      <span class="title">Withdraw delayed property</span>
+    </div>
+    <div class="p-2">
+      <form id="form-properties" class="d-flex flex-column gap-2 p-2">
+        <div class="form-group">
+          <label class="form-label">Check if you have share for address:</label>
+          <input
+            id="form-input-properties-2"
+            type="text"
+            placeholder="0xWallet"
+            data-form-name="properties"
+            data-field-type="address"
+            class="form-control"
+          />
+        </div>
+        <button id="checkProperty" type="button" data-form-name="properties" class="btn btn-dark mt-2">
+          Check share for address
+        </button>
+        <span id="form-output-properties-1" data-form-name="properties" data-field-type="uint256" class="d-none"></span>
+        <div id="no-share" role="alert" class="d-none alert alert-secondary">
+          You don`t have share for this address!
+        </div>
+        <div id="check-property" class="d-none info card p-2">
+          <div class="info-row">
+            <div class="info-label">Token:</div>
+            <div id="check-property-token" class="info-value"></div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Address of first successor:</div>
+            <div id="check-property-successor1" class="info-value"></div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Share of first successor (5000 = 50%):</div>
+            <div id="check-property-share1" class="info-value"></div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Address of second successor:</div>
+            <div id="check-property-successor2" class="info-value"></div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Share of second successor (5000 = 50%):</div>
+            <div id="check-property-share2" class="info-value"></div>
+          </div>
+          <div class="info-row">
+            <div class="info-label">Time left:</div>
+            <div id="check-property-time" class="info-value"></div>
+          </div>
+          <input
+            id="form-input-withdrawProperty-propertyOwner"
+            type="text"
+            placeholder="Enter value as propertyOwner<address>"
+            data-form-name="withdrawProperty"
+            data-field-type="address"
+            class="d-none"
+          />
+          <button type="button" data-form-name="withdrawProperty" class="down-button btn btn-dark mt-2 w-100">
+            Withdraw share
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <script>
+    document.getElementById("checkProperty").addEventListener("click", checkProperty);
+    document.getElementById("form-input-properties-2").addEventListener("input", function (event) {
+      document.getElementById("form-input-properties-").value = event.target.value;
+    });
+    document.getElementById("maxApprove").addEventListener("click", maxApprove);
+  </script>
+</body>

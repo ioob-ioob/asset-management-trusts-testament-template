@@ -1,0 +1,167 @@
+<body>
+  <div class="title-div">
+    <span class="title">Admin page</span>
+  </div>
+  <div class="p-2">
+    <div class="accordion">
+      <div class="accordion-item">
+        <section class="m-auto w-100">
+          <h3 id="headingOne" class="accordion-header text-center">
+            <button
+              type="button"
+              aria-controls="collapse_feeAddress"
+              aria-expanded="true"
+              data-bs-target="#collapse_feeAddress"
+              data-bs-toggle="collapse"
+              class="accordion-button collapsed"
+            >
+              Check current fee address
+            </button>
+          </h3>
+          <div
+            id="collapse_feeAddress"
+            data-bs-parent="#accordionExample"
+            aria-labelledby="headingOne"
+            class="accordion-collapse collapse"
+          >
+            <div class="accordion-body">
+              <form id="form-feeAddress" class="d-flex flex-column gap-2 p-2">
+                <button type="button" data-form-name="feeAddress" class="btn btn-dark mt-2">Check</button>
+                <div id="iogdf">
+                  <span id="i3v0m">Response: </span>
+                  <span id="form-output-feeAddress-0" data-form-name="feeAddress" data-field-type="address"
+                    >address</span
+                  >
+                </div>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <div class="p-2">
+    <div class="accordion">
+      <div class="accordion-item">
+        <section class="m-auto w-100">
+          <h3 id="headingOne-2" class="accordion-header text-center">
+            <button
+              type="button"
+              aria-controls="collapse_setFeeAddress"
+              aria-expanded="true"
+              data-bs-target="#collapse_setFeeAddress"
+              data-bs-toggle="collapse"
+              class="accordion-button collapsed"
+            >
+              Update fee address
+            </button>
+          </h3>
+          <div
+            id="collapse_setFeeAddress"
+            data-bs-parent="#accordionExample"
+            aria-labelledby="headingOne"
+            class="accordion-collapse collapse"
+          >
+            <div class="accordion-body">
+              <form id="form-setFeeAddress" class="d-flex flex-column gap-2 p-2">
+                <div class="form-group">
+                  <label class="form-label">New fee address</label>
+                  <input
+                    id="form-input-setFeeAddress-_feeAddress"
+                    type="text"
+                    placeholder="0xWallet"
+                    data-form-name="setFeeAddress"
+                    data-field-type="address"
+                    class="form-control"
+                  />
+                </div>
+                <button type="button" data-form-name="setFeeAddress" class="btn btn-dark mt-2">
+                  Update fee address
+                </button>
+                <div></div>
+              </form>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+  <div class="p-2">
+    <div class="accordion">
+      <div class="accordion-item">
+        <section class="m-auto w-100">
+          <h3 id="headingOne-4" class="accordion-header text-center">
+            <button
+              type="button"
+              aria-controls="collapse_transferOwnership"
+              aria-expanded="true"
+              data-bs-target="#collapse_transferOwnership"
+              data-bs-toggle="collapse"
+              class="accordion-button collapsed danger"
+            >
+              Danger zone!<span id="i58wo"></span>
+            </button>
+          </h3>
+          <div
+            id="collapse_transferOwnership"
+            data-bs-parent="#accordionExample"
+            aria-labelledby="headingOne"
+            class="accordion-collapse collapse"
+          >
+            <div class="accordion-body">
+              <form id="form-transferOwnership" class="d-flex flex-column gap-2 p-2">
+                <div class="form-group">
+                  <label class="form-label">New Owner address</label>
+                  <input
+                    id="form-input-transferOwnership-newOwner"
+                    type="text"
+                    placeholder="Enter value as newOwner<address>"
+                    data-form-name="transferOwnership"
+                    data-field-type="address"
+                    class="form-control"
+                  />
+                </div>
+                <button type="button" data-form-name="transferOwnership" class="btn btn-danger mt-2">Update</button>
+                <div id="iebpu"></div>
+              </form>
+            </div>
+            <div class="p-2">
+              <div class="accordion">
+                <div class="accordion-item">
+                  <section class="m-auto w-100">
+                    <h3 id="headingOne-5" class="accordion-header text-center">
+                      <button
+                        type="button"
+                        aria-controls="collapse_renounceOwnership"
+                        aria-expanded="true"
+                        data-bs-target="#collapse_renounceOwnership"
+                        data-bs-toggle="collapse"
+                        class="accordion-button btn-danger collapsed danger"
+                      >
+                        RenounceOwnership
+                      </button>
+                    </h3>
+                    <div
+                      id="collapse_renounceOwnership"
+                      data-bs-parent="#accordionExample"
+                      aria-labelledby="headingOne"
+                      class="accordion-collapse collapse"
+                    >
+                      <div class="accordion-body">
+                        <button type="button" data-form-name="renounceOwnership" class="btn btn-danger mt-2 w-100">
+                          Lose access to the contract<br />
+                        </button>
+                        <div id="i9dvx"></div>
+                        <form id="form-renounceOwnership" class="d-flex flex-column gap-2 p-2"></form>
+                      </div>
+                    </div>
+                  </section>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+  </div>
+</body>
